@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multipair RSI Overbought Oversold Telegram Alert Bot", "Multipair RSI Overbought Oversold Telegram Alert Bot\Multipair RSI Overbought Oversold Telegram Alert Bot.csproj", "{343f7642-0f98-44ad-9030-f68b97760305}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSI_Alert_bot", "RSI_Alert_bot\RSI_Alert_bot.csproj", "{343f7642-0f98-44ad-9030-f68b97760305}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

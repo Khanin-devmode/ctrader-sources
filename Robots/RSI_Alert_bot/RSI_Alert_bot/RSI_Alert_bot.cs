@@ -10,7 +10,7 @@ using cAlgo.API.Internals;
 namespace cAlgo.Robots
 {
     [Robot(AccessRights = AccessRights.FullAccess)]
-    public class RSIOverboughtOversoldTelegramAlertBot : Robot
+    public class RSI_Alert_bot : Robot
     {
         
         protected DataSeries Source;
