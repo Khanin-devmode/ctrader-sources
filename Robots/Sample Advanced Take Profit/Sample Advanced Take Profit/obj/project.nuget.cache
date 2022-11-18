@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "9TMLgbqg31cnc2v37e/QazoBPSDa3u2Gj0bUTrPty3j4OY9rQwbw3IKh9DwAZhb8U/MZLE65j5BokspKNVoflg==",
+  "success": true,
+  "projectFilePath": "/Users/khanin/Documents/cAlgo/Sources/Robots/Sample Advanced Take Profit/Sample Advanced Take Profit/Sample Advanced Take Profit.csproj",
+  "expectedPackageFiles": [
+    "/Users/khanin/.nuget/packages/ctrader.automate/1.0.3/ctrader.automate.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "nehhP8Q8oU6vWbGFvQeSDzgjtYn4krDoaU/37K41NrYJhaSHO0GaZO5l5JNTQrf8mJT/8wh8aGdD3kQE+/4jMQ==",
+  "success": true,
+  "projectFilePath": "/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/Trend cBot with Sizing.csproj",
+  "expectedPackageFiles": [
+    "/Users/khanin/.nuget/packages/ctrader.automate/1.0.2/ctrader.automate.1.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}

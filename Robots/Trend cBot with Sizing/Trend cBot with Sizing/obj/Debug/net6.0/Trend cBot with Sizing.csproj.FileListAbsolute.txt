@@ -1,0 +1,12 @@
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/bin/Debug/net6.0/Trend cBot with Sizing.deps.json
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/bin/Debug/net6.0/Trend cBot with Sizing.dll
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/bin/Debug/net6.0/Trend cBot with Sizing.pdb
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.csproj.AssemblyReference.cache
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.GeneratedMSBuildEditorConfig.editorconfig
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.AssemblyInfoInputs.cache
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.AssemblyInfo.cs
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.csproj.CoreCompileInputs.cache
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.dll
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/refint/Trend cBot with Sizing.dll
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/Trend cBot with Sizing.pdb
+/Users/khanin/Documents/cAlgo/Sources/Robots/Trend cBot with Sizing/Trend cBot with Sizing/obj/Debug/net6.0/ref/Trend cBot with Sizing.dll
