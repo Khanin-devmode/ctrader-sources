@@ -1,4 +1,4 @@
-﻿// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
 //
 //    This code is a cTrader Automate API example.
 //    
@@ -44,6 +44,7 @@ namespace cAlgo
                 sum += Math.Pow(Source[index - period] - average, 2.0);
 
             Result[index] = Math.Sqrt(sum / Periods);
+            Print(Result[0]);
         }
     }
 }

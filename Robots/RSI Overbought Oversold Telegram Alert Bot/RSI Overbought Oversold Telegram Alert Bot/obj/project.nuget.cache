@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "GutSaL2Gd5BcSsnMAnrSYopNFdoLIVn97vFGXqlbCAQHPZn4MUBpVigz5VAEwnVIh7MW6nciXuWpQr+452xp1A==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Khanin\\Documents\\cAlgo\\Sources\\Robots\\RSI Overbought Oversold Telegram Alert Bot\\RSI Overbought Oversold Telegram Alert Bot\\RSI Overbought Oversold Telegram Alert Bot.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Khanin\\.nuget\\packages\\ctrader.automate\\1.0.4\\ctrader.automate.1.0.4.nupkg.sha512",
+    "C:\\Users\\Khanin\\.nuget\\packages\\newtonsoft.json\\12.0.2\\newtonsoft.json.12.0.2.nupkg.sha512",
+    "C:\\Users\\Khanin\\.nuget\\packages\\telegram.bot\\18.0.0\\telegram.bot.18.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
