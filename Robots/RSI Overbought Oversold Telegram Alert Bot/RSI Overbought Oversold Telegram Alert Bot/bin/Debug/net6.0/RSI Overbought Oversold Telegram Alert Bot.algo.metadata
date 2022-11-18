@@ -16,13 +16,6 @@
     "Clouds": [],
     "Parameters": [
       {
-        "DefaultValue": "Hello world!",
-        "ParameterType": "String",
-        "PropertyName": "Message",
-        "FriendlyName": "Message",
-        "GroupName": null
-      },
-      {
         "DefaultValue": "5680517295:AAGy2NnvXz72ZZWQIWuksP4nn3vYfo1f1EU",
         "ParameterType": "String",
         "PropertyName": "BotToken",
@@ -35,6 +28,36 @@
         "PropertyName": "ChatID",
         "FriendlyName": "Chat ID",
         "GroupName": "Telegram Notificatinons"
+      },
+      {
+        "MinValue": 4,
+        "MaxValue": 30,
+        "Step": 2,
+        "DefaultValue": 14,
+        "ParameterType": "Integer",
+        "PropertyName": "RsiPeriod",
+        "FriendlyName": "RsiPeriod",
+        "GroupName": "RSI"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 65,
+        "ParameterType": "Integer",
+        "PropertyName": "RsiHighThres",
+        "FriendlyName": "RsiHighThres",
+        "GroupName": "RSI"
+      },
+      {
+        "MinValue": -2147483648,
+        "MaxValue": 2147483647,
+        "Step": 1,
+        "DefaultValue": 35,
+        "ParameterType": "Integer",
+        "PropertyName": "RsiLowThres",
+        "FriendlyName": "RsiLowThres",
+        "GroupName": "RSI"
       }
     ],
     "Capabilities": [

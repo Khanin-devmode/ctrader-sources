@@ -10,7 +10,7 @@ using cAlgo.API.Internals;
 namespace cAlgo.Robots
 {
     [Robot(AccessRights = AccessRights.FullAccess)]
-    public class RSIOverboughtOversoldTelegramAlertBot : Robot
+    public class MultipairRSIOverboughtOversoldTelegramAlertBot : Robot
     {
         
         protected DataSeries Source;
@@ -65,9 +65,9 @@ namespace cAlgo.Robots
         protected override void OnBar(){
         
             if (rsi.Result.Last(1) <= RsiLowThres) { //Over Sold.
-                telegram.SendTelegram(ChatID, BotToken, symbolDisplay + " is oversold on last bar");
+                telegram.SendTelegram(ChatID, BotToken, symbolDisplay + "is oversold on last bar");
             }else if(rsi.Result.Last(1) >= RsiHighThres){ //Over bought.
-                telegram.SendTelegram(ChatID, BotToken, symbolDisplay + " is overbought on last bar");
+                telegram.SendTelegram(ChatID, BotToken, symbolDisplay + "is overbought on last bar");
             }
         }
 
