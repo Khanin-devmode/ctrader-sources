@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using cAlgo.API;
-using cAlgo.API.Collections;
 using cAlgo.API.Indicators;
 using cAlgo.API.Internals;
 
@@ -35,7 +32,8 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 35, Group = "RSI")]
         public int RsiLowThres { get; set; }
 
-        protected List<string> symbolList = new List<string>() { "EURUSD", "GBPUSD", "USDCAD" };
+        private List<string> symbolList = new List<string>() { "EURUSD", "GBPUSD", "USDCAD" };
+        private List<PairInfo> pairInfoList = new List<PairInfo>();
 
         protected override void OnStart()
         {
@@ -43,15 +41,20 @@ namespace cAlgo.Robots
             // https://help.ctrader.com/ctrader-automate
 
             telegram = new Telegram();
-            symbolDisplay = SymbolName + TimeFrame;
 
-            telegram.SendTelegram(ChatID, BotToken, symbolDisplay + " Bot Start");
+            telegram.SendTelegram(ChatID, BotToken," Bot Start");
 
             rsi = Indicators.RelativeStrengthIndex(Source, RsiPeriod);
 
             foreach (string symbol in symbolList)
             {
-                Print(symbol);
+
+                var pairInfo = new PairInfo();
+                pairInfo.pairName = symbol;
+                pairInfo.bars = MarketData.GetBars(TimeFrame, symbol);
+                pairInfo.rsi = Indicators.RelativeStrengthIndex(pairInfo.bars.ClosePrices, RsiPeriod);
+
+                pairInfoList.Add(pairInfo);
             }
 
         }
@@ -65,15 +68,22 @@ namespace cAlgo.Robots
 
         protected override void OnBar()
         {
+            foreach (PairInfo pair in pairInfoList) {
 
-            if (rsi.Result.Last(1) <= RsiLowThres)
-            { //Over Sold.
-                telegram.SendTelegram(ChatID, BotToken, symbolDisplay + " is oversold on last bar");
+                var rsiResult = pair.rsi.Result;
+
+                if (rsiResult.Last(1) <= RsiLowThres)
+                { //Over Sold.
+                    telegram.SendTelegram(ChatID, BotToken, pair.pairName + " " + TimeFrame + " is oversold on last bar" + "rsi: "+rsiResult.Last(1));
+                }
+                else if (rsiResult.Last(1) >= RsiHighThres)
+                { //Over bought.
+                    telegram.SendTelegram(ChatID, BotToken, pair.pairName + " " +TimeFrame + " is overbought on last bar" + "rsi: " + rsiResult.Last(1));
+                }
+
+
             }
-            else if (rsi.Result.Last(1) >= RsiHighThres)
-            { //Over bought.
-                telegram.SendTelegram(ChatID, BotToken, symbolDisplay + " is overbought on last bar");
-            }
+                
         }
 
         protected override void OnStop()
@@ -85,8 +95,10 @@ namespace cAlgo.Robots
 
     public class PairInfo
     {   
-        String pairName;
-        String timeFrame;
-        RelativeStrengthIndex rsi;
+        public String pairName;
+        public String timeFrame;
+        public RelativeStrengthIndex rsi;
+        public Bars bars;
+
     }
 }
