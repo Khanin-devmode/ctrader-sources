@@ -1,0 +1,22 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multipair_RSI_Alert_Bot", "Multipair_RSI_Alert_Bot\Multipair_RSI_Alert_Bot.csproj", "{e88a496f-6015-4bc7-b40e-9347943ffd85}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{e88a496f-6015-4bc7-b40e-9347943ffd85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{e88a496f-6015-4bc7-b40e-9347943ffd85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{e88a496f-6015-4bc7-b40e-9347943ffd85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{e88a496f-6015-4bc7-b40e-9347943ffd85}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
