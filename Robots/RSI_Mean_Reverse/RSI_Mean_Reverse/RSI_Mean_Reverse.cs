@@ -25,6 +25,12 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 14, MinValue = 4, MaxValue = 30, Step = 2)]
         public int RsiPeriod { get; set; }
         
+        [Parameter(DefaultValue = 40, MinValue = 30, MaxValue = 50, Step = 5)]
+        public int ShortExitRsi { get; set; }
+        
+        [Parameter(DefaultValue = 60, MinValue = 50, MaxValue = 70, Step = 5)]
+        public int LongExitRsi { get; set; }
+        
         [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 150, Step = 5)]
         public int TakeProfitPips { get; set; }
         
@@ -42,7 +48,15 @@ namespace cAlgo.Robots
 
         protected override void OnTick()
         {
-            // Handle price updates here
+
+            var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
+            var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
+
+            if(shortPosition != null && rsi.Result.LastValue <= ShortExitRsi){
+                ClosePosition(shortPosition);
+            }else if (longPosition != null && rsi.Result.LastValue >= LongExitRsi){
+                ClosePosition(longPosition);
+            }
         }
         
         protected override void OnBar(){
@@ -50,28 +64,19 @@ namespace cAlgo.Robots
             var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
             var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
 
-            var lastRsi = rsi.Result.Last(1);
-
-
             var volumeInUnits = GetOptimalBuyUnit(StopLossPips,StopLossPrc);
 
+            //if(shortPosition != null && rsi.Result.Last(1) <= ExitRsi){
+            //    ClosePosition(shortPosition);
+            //}else if (longPosition != null && rsi.Result.Last(1) >= ExitRsi){
+            //    ClosePosition(longPosition);
+            //}
             
-            if (rsi.Result.HasCrossedAbove(RsiLow,0))
-            {
-                if(shortPosition != null){
-                    ClosePosition(shortPosition);
-                }else if(longPosition == null){
-                    ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
-                }
-                
-            } else if (rsi.Result.HasCrossedBelow(RsiHigh,0))
-            {
-                if(longPosition != null){
-                    ClosePosition(longPosition);
-                }else if(shortPosition == null){
-                    ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
-                }
-                
+            
+            if (rsi.Result.HasCrossedAbove(RsiLow,0) && longPosition == null){
+                ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+            } else if (rsi.Result.HasCrossedBelow(RsiHigh,0) && shortPosition == null){
+                ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
             }
         }
 
