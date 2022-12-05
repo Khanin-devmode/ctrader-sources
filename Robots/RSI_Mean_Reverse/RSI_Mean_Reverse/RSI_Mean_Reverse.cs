@@ -14,8 +14,11 @@ namespace cAlgo.Robots
     {
         private const string label = "RSI Reverse Bot";
         private RelativeStrengthIndex rsi;
-        protected DataSeries Source;
+
         Telegram telegram;
+        
+        [Parameter("Source", DefaultValue = "Close")]
+        public DataSeries Source { get; set; }
 
         [Parameter(DefaultValue = 70, MinValue = 65, MaxValue = 75, Step = 5)]
         public int RsiHigh { get; set; }
@@ -47,16 +50,18 @@ namespace cAlgo.Robots
         [Parameter("Chat ID", DefaultValue = "5068539927", Group = "Telegram Notificatinons")]
         public string ChatID { get; set; }
         
-        [Parameter(DefaultValue = true)]
+        [Parameter(DefaultValue = false)]
         public bool NotifyOnOrder { get; set; }
 
 
         protected override void OnStart()
         {
+            if(NotifyOnOrder) {
+                telegram = new Telegram();
 
-            telegram = new Telegram();
+                telegram.SendTelegram(ChatID, BotToken, $"{label} Start");
+            }
 
-            telegram.SendTelegram(ChatID, BotToken, $"{label} Start");
 
             rsi = Indicators.RelativeStrengthIndex(Source,RsiPeriod);
         }
@@ -105,7 +110,7 @@ namespace cAlgo.Robots
             //}
             
             
-            if (rsi.Result.HasCrossedAbove(RsiLow,0) && longPosition == null){
+            if (rsi.Result.Last(1) > RsiLow && rsi.Result.Last(2) < RsiLow && longPosition == null){
                 var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
                 
                 if(NotifyOnOrder){
@@ -118,7 +123,7 @@ namespace cAlgo.Robots
                 }
 
                 
-            } else if (rsi.Result.HasCrossedBelow(RsiHigh,0) && shortPosition == null){
+            } else if (rsi.Result.Last(1) < RsiHigh && rsi.Result.Last(2) > RsiHigh && shortPosition == null){
                 var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
                 if(NotifyOnOrder){
                     var position = result.Position;
@@ -133,8 +138,9 @@ namespace cAlgo.Robots
 
         protected override void OnStop()
         {
-
-            telegram.SendTelegram(ChatID, BotToken, $"{label} Stop");
+            if (NotifyOnOrder) {
+                telegram.SendTelegram(ChatID, BotToken, $"{label} Stop");
+            }
 
 
         }
