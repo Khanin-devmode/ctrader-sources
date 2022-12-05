@@ -9,13 +9,14 @@ using cAlgo.API.Internals;
 
 namespace cAlgo.Robots
 {
-    [Robot(AccessRights = AccessRights.None)]
+    [Robot(AccessRights = AccessRights.FullAccess)]
     public class RSI_Mean_Reverse : Robot
     {
         private const string label = "RSI Reverse Bot";
         private RelativeStrengthIndex rsi;
         protected DataSeries Source;
-        
+        Telegram telegram;
+
         [Parameter(DefaultValue = 70, MinValue = 65, MaxValue = 75, Step = 5)]
         public int RsiHigh { get; set; }
         
@@ -39,10 +40,24 @@ namespace cAlgo.Robots
         
         [Parameter(DefaultValue = 0.02, MinValue = 0.01, MaxValue = 0.05, Step = 0.01)]
         public double StopLossPrc { get; set; }
+
+        [Parameter("Bot Token", DefaultValue = "5680517295:AAGy2NnvXz72ZZWQIWuksP4nn3vYfo1f1EU", Group = "Telegram Notificatinons")]
+        public string BotToken { get; set; }
+
+        [Parameter("Chat ID", DefaultValue = "5068539927", Group = "Telegram Notificatinons")]
+        public string ChatID { get; set; }
         
+        [Parameter(DefaultValue = true)]
+        public bool NotifyOnOrder { get; set; }
+
 
         protected override void OnStart()
         {
+
+            telegram = new Telegram();
+
+            telegram.SendTelegram(ChatID, BotToken, $"{label} Start");
+
             rsi = Indicators.RelativeStrengthIndex(Source,RsiPeriod);
         }
 
@@ -53,9 +68,26 @@ namespace cAlgo.Robots
             var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
 
             if(shortPosition != null && rsi.Result.LastValue <= ShortExitRsi){
-                ClosePosition(shortPosition);
+                var result = ClosePosition(shortPosition);
+                if(NotifyOnOrder){
+                    var position = result.Position;
+                    if(result.IsSuccessful){
+                        telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing SHORT poition {position.SymbolName}. Profit {position.NetProfit} USD");
+                    }else{
+                        telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
+                    }
+                }
             }else if (longPosition != null && rsi.Result.LastValue >= LongExitRsi){
-                ClosePosition(longPosition);
+                var result = ClosePosition(longPosition);
+                if(NotifyOnOrder){
+                    var position = result.Position;
+                    if(result.IsSuccessful){
+                        telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing LONG poition {position.SymbolName}. Profit {position.NetProfit} USD");
+                    }else{
+                        telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
+                    }
+                }                
+                
             }
         }
         
@@ -74,17 +106,39 @@ namespace cAlgo.Robots
             
             
             if (rsi.Result.HasCrossedAbove(RsiLow,0) && longPosition == null){
-                ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+                
+                if(NotifyOnOrder){
+                    var position = result.Position;
+                    if(result.IsSuccessful){
+                        telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Buying {position.SymbolName} at {position.EntryPrice}");
+                    }else{
+                        telegram.SendTelegram(ChatID, BotToken, $"Error executing market order {result.Error}");
+                    }
+                }
+
+                
             } else if (rsi.Result.HasCrossedBelow(RsiHigh,0) && shortPosition == null){
-                ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+                if(NotifyOnOrder){
+                    var position = result.Position;
+                    if(result.IsSuccessful){
+                        telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Selling {position.SymbolName} at {position.EntryPrice}");
+                    }else{
+                        telegram.SendTelegram(ChatID, BotToken, $"Error executing market order {result.Error}");
+                    }
+                }                
             }
         }
 
         protected override void OnStop()
         {
-            // Handle cBot stop here
+
+            telegram.SendTelegram(ChatID, BotToken, $"{label} Stop");
+
+
         }
-        
+
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
         {
         
