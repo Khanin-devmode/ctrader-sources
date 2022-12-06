@@ -26,13 +26,13 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 30, MinValue = 25, MaxValue = 35, Step = 5)]
         public int RsiLow { get; set; }
         
-        [Parameter(DefaultValue = 14, MinValue = 4, MaxValue = 30, Step = 2)]
+        [Parameter(DefaultValue = 14, MinValue = 2, MaxValue = 60, Step = 2)]
         public int RsiPeriod { get; set; }
         
-        [Parameter(DefaultValue = 40, MinValue = 30, MaxValue = 50, Step = 5)]
+        [Parameter(DefaultValue = 30, MinValue = 30, MaxValue = 70, Step = 5)]
         public int ShortExitRsi { get; set; }
         
-        [Parameter(DefaultValue = 60, MinValue = 50, MaxValue = 70, Step = 5)]
+        [Parameter(DefaultValue = 70, MinValue = 30, MaxValue = 70, Step = 5)]
         public int LongExitRsi { get; set; }
         
         [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 150, Step = 5)]
@@ -141,7 +141,6 @@ namespace cAlgo.Robots
             if (NotifyOnOrder) {
                 telegram.SendTelegram(ChatID, BotToken, $"{label} Stop");
             }
-
 
         }
 
