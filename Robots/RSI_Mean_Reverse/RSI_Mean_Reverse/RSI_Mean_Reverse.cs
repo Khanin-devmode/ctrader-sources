@@ -20,28 +20,28 @@ namespace cAlgo.Robots
         [Parameter("Source", DefaultValue = "Close")]
         public DataSeries Source { get; set; }
 
-        [Parameter(DefaultValue = 70, MinValue = 65, MaxValue = 75, Step = 5)]
+        [Parameter(DefaultValue = 70, MinValue = 60, MaxValue = 80, Step = 5)]
         public int RsiHigh { get; set; }
         
-        [Parameter(DefaultValue = 30, MinValue = 25, MaxValue = 35, Step = 5)]
+        [Parameter(DefaultValue = 30, MinValue = 20, MaxValue = 40, Step = 5)]
         public int RsiLow { get; set; }
         
         [Parameter(DefaultValue = 14, MinValue = 2, MaxValue = 60, Step = 2)]
         public int RsiPeriod { get; set; }
         
-        [Parameter(DefaultValue = 30, MinValue = 30, MaxValue = 70, Step = 5)]
-        public int ShortExitRsi { get; set; }
+        //[Parameter(DefaultValue = 30, MinValue = 20, MaxValue = 70, Step = 5)]
+        //public int ShortExitRsi { get; set; }
         
-        [Parameter(DefaultValue = 70, MinValue = 30, MaxValue = 70, Step = 5)]
-        public int LongExitRsi { get; set; }
-        
-        [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 150, Step = 5)]
-        public int TakeProfitPips { get; set; }
-        
-        [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 150, Step = 5)]
+        //[Parameter(DefaultValue = 70, MinValue = 30, MaxValue = 80, Step = 5)]
+        //public int LongExitRsi { get; set; }
+
+        [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
+        public double RewardRiskRatio { get; set; }
+
+        [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 50, Step = 5)]
         public int StopLossPips { get; set; }
         
-        [Parameter(DefaultValue = 0.02, MinValue = 0.01, MaxValue = 0.05, Step = 0.01)]
+        [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
 
         [Parameter("Bot Token", DefaultValue = "5680517295:AAGy2NnvXz72ZZWQIWuksP4nn3vYfo1f1EU", Group = "Telegram Notificatinons")]
@@ -66,35 +66,40 @@ namespace cAlgo.Robots
             rsi = Indicators.RelativeStrengthIndex(Source,RsiPeriod);
         }
 
-        protected override void OnTick()
-        {
+        //protected override void OnTick()
+        //{
 
-            var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
-            var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
+        //    var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
+        //    var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
 
-            if(shortPosition != null && rsi.Result.LastValue <= ShortExitRsi){
-                var result = ClosePosition(shortPosition);
-                if(NotifyOnOrder){
-                    var position = result.Position;
-                    if(result.IsSuccessful){
-                        telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing SHORT poition {position.SymbolName}. Profit {position.NetProfit} USD");
-                    }else{
-                        telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
-                    }
-                }
-            }else if (longPosition != null && rsi.Result.LastValue >= LongExitRsi){
-                var result = ClosePosition(longPosition);
-                if(NotifyOnOrder){
-                    var position = result.Position;
-                    if(result.IsSuccessful){
-                        telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing LONG poition {position.SymbolName}. Profit {position.NetProfit} USD");
-                    }else{
-                        telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
-                    }
-                }                
+        //    if(shortPosition != null && rsi.Result.LastValue <= ShortExitRsi){
+        //        var result = ClosePosition(shortPosition);
                 
-            }
-        }
+                
+        //        //telegram logic
+        //        if(NotifyOnOrder){
+        //            var position = result.Position;
+        //            if(result.IsSuccessful){
+        //                telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing SHORT poition {position.SymbolName}. Profit {position.NetProfit} USD");
+        //            }else{
+        //                telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
+        //            }
+        //        }
+        //    }else if (longPosition != null && rsi.Result.LastValue >= LongExitRsi){
+        //        var result = ClosePosition(longPosition);
+                
+        //        //telegram logic
+        //        if(NotifyOnOrder){
+        //            var position = result.Position;
+        //            if(result.IsSuccessful){
+        //                telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing LONG poition {position.SymbolName}. Profit {position.NetProfit} USD");
+        //            }else{
+        //                telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
+        //            }
+        //        }                
+                
+        //    }
+        //}
         
         protected override void OnBar(){
         
@@ -111,7 +116,7 @@ namespace cAlgo.Robots
             
             
             if (rsi.Result.Last(1) > RsiLow && rsi.Result.Last(2) < RsiLow && longPosition == null){
-                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips*RewardRiskRatio);
                 
                 if(NotifyOnOrder){
                     var position = result.Position;
@@ -124,7 +129,7 @@ namespace cAlgo.Robots
 
                 
             } else if (rsi.Result.Last(1) < RsiHigh && rsi.Result.Last(2) > RsiHigh && shortPosition == null){
-                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, TakeProfitPips);
+                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips * RewardRiskRatio);
                 if(NotifyOnOrder){
                     var position = result.Position;
                     if(result.IsSuccessful){
