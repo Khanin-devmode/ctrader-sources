@@ -38,7 +38,7 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
         public double RewardRiskRatio { get; set; }
 
-        [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 50, Step = 5)]
+        [Parameter(DefaultValue = 20, MinValue = 5, MaxValue = 50, Step = 5)]
         public int StopLossPips { get; set; }
         
         [Parameter(DefaultValue = 0.02)]
