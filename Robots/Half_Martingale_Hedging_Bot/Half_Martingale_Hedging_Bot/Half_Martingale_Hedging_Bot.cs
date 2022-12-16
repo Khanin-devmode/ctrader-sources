@@ -27,21 +27,34 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
         
-        PendingOrder hedgingOrder;
+        PendingOrder hedgingShortOrder;
+        PendingOrder hedgingLongOrder;
 
         protected override void OnStart()
         {
             rsi = Indicators.RelativeStrengthIndex(Source,14);
             Positions.Closed += OnPositionClosed;
-
+            PendingOrders.Filled += OnPendingOrderFilled;
         }
         
         private void OnPositionClosed(PositionClosedEventArgs args)
         {
             var closedPosition = args.Position;
-            Print("Position closed with {0} profit", closedPosition.GrossProfit);
+            
             //var positions = Positions.FindAll(label,SymbolName);
-            hedgingOrder.Cancel();
+            
+            if(closedPosition.TradeType == TradeType.Buy){
+                hedgingLongOrder.Cancel();
+            }else if(closedPosition.TradeType == TradeType.Sell){
+                hedgingShortOrder.Cancel();
+            }
+        }
+
+        private void OnPendingOrderFilled(PendingOrderFilledEventArgs args) { 
+            //Hedging filled
+            //Modify entry position, cancel tp.
+            
+
         }
 
         protected override void OnTick()
@@ -51,28 +64,29 @@ namespace cAlgo.Robots
         
         protected override void OnBar(){
             // Handle price updates here
-            if(LongSingal()){
+            var longPositions = Positions.Find(label, SymbolName, TradeType.Buy);
+            var shortPositions = Positions.Find(label, SymbolName, TradeType.Sell);
+            
+            if(LongSingal() && longPositions == null){
                var volumeInUnits = GetOptimalBuyUnit(HedgingPips,StopLossPrc);
                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, null, HedgingPips*RewardRiskRatio);
                if(result.IsSuccessful){
                     double targePrice = result.Position.EntryPrice - (HedgingPips*Symbol.PipSize); 
                     var hedgeResult = PlaceStopOrder(TradeType.Sell, SymbolName, volumeInUnits,targePrice,label);
                     if(hedgeResult.IsSuccessful){
-                       hedgingOrder = hedgeResult.PendingOrder;
+                       hedgingLongOrder = hedgeResult.PendingOrder;
                     }
                     
-                    
                }
-               
-               
-            }else if(ShortSignal()){
+                            
+            }else if(ShortSignal() && shortPositions == null){
                var volumeInUnits = GetOptimalBuyUnit(HedgingPips,StopLossPrc);
                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, null, HedgingPips*RewardRiskRatio);
                 if(result.IsSuccessful){
                     double targePrice = result.Position.EntryPrice + (HedgingPips*Symbol.PipSize); 
                     var hedgeResult = PlaceStopOrder(TradeType.Buy, SymbolName, volumeInUnits,targePrice,label);
                     if(hedgeResult.IsSuccessful){
-                        hedgingOrder = hedgeResult.PendingOrder;
+                        hedgingShortOrder = hedgeResult.PendingOrder;
                     }
                }
             }
@@ -80,7 +94,6 @@ namespace cAlgo.Robots
 
         protected override void OnStop()
         {
-            // Handle cBot stop herei
 
         }
         
@@ -111,6 +124,15 @@ namespace cAlgo.Robots
         private bool ShortSignal(){
 
             return rsi.Result.Last(1) < 70 && rsi.Result.Last(2) > 70; //Sample signal
+        }
+
+        private double FakeUpperResistance(double entryPrice) {
+            return entryPrice + (Symbol.PipSize * 80); 
+        }
+
+        private double FakeLowerResistance(double entryPrice)
+        {
+            return entryPrice + (Symbol.PipSize * 80);
         }
     }
     
