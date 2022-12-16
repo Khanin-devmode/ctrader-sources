@@ -121,8 +121,31 @@ namespace cAlgo.Robots
                         }
                     }    
                 }          
+            
+                
+            
             }
-
+            
+            if(currentPhase == TradePhase.AimBE){
+                
+                double currentNetProfit = 0; 
+                Position[] allPosition = Positions.FindAll(label,SymbolName);
+                foreach (Position position in allPosition){
+                    currentNetProfit = currentNetProfit + position.GrossProfit;
+                }
+                
+                if(currentNetProfit >= 0){
+                    foreach (Position position in allPosition){
+                        ClosePositionAsync(position);
+                    }    
+                    
+                    currentPhase = TradePhase.AimTP;
+                                     
+                }
+            
+            }
+            
+            
         }
         
         protected override void OnBar(){
@@ -206,7 +229,7 @@ namespace cAlgo.Robots
         
         private double GetTotalTradeVolume(TradeType tradeType){
             double totalVolume = 0;
-            var positions = Positions.FindAll(label,SymbolName,tradeType);
+            Position[] positions = Positions.FindAll(label,SymbolName,tradeType);
             foreach (Position position in positions){
                 totalVolume = totalVolume + position.VolumeInUnits;
             }
