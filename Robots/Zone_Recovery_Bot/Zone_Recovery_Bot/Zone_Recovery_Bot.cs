@@ -18,7 +18,7 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
         public double RewardRiskRatio { get; set; }
         
-        [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
+        [Parameter(DefaultValue = 1.5, MinValue = 1.2, MaxValue = 2, Step = 0.1)]
         public double HedgingRatio { get; set; }
 
         [Parameter(DefaultValue = 20, MinValue = 5, MaxValue = 100, Step = 5)]
@@ -35,8 +35,8 @@ namespace cAlgo.Robots
         double lowerZonePrice;
         double totalLongUnit = 0;
         double totalShortUnit = 0;
-        private Position[] allPosition;
-        
+        double targetProfit = 0;
+        Position[] allPosition;
 
         protected override void OnStart()
         {
@@ -52,34 +52,61 @@ namespace cAlgo.Robots
            
                double shortUnitInVolume = (totalLongUnit*HedgingRatio) - totalShortUnit;
                var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume);
+               if(shortResult.IsSuccessful){
+                    //add total
+                    totalShortUnit = totalShortUnit + shortResult.Position.VolumeInUnits;
+                    
+               }
                
-               
+           }else if(Symbol.Bid >= upperZonePrice && totalShortUnit > totalLongUnit){
+                
+                double longUnitInVolume = (totalShortUnit * HedgingRatio) - totalLongUnit;
+                var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume);
+                
+                if(longResult.IsSuccessful){
+                    //add total
+                    totalLongUnit = totalLongUnit + longResult.Position.VolumeInUnits;
+                }
+           }
+           
+           if(allPosition != null){
+                if(Account.UnrealizedNetProfit > targetProfit){
+                
+                    foreach(Position position in allPosition){
+                        ClosePositionAsync(position);
+                    }
+                    
+                    Reset();
+                }
            }
            
         }
         
         protected override void OnBar(){
+        
+            allPosition = Positions.FindAll(label);
             
-            if(LongSignal()){
+            if(LongSignal() && allPosition == null){
                 
                 stdLotSize = GetOptimalBuyUnit(RecoveryZonePips,StopLossPrc);
-                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,stdLotSize,label,null,RecoveryZonePips * RewardRiskRatio);
+                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,stdLotSize,label);
                 if(result.IsSuccessful){
                     upperZonePrice = result.Position.EntryPrice;
                     lowerZonePrice = upperZonePrice - (RecoveryZonePips * Symbol.PipSize);
                     totalLongUnit = totalLongUnit + result.Position.VolumeInUnits;
+                    targetProfit = Account.Equity * (StopLossPrc * RewardRiskRatio);
                 
                 }
             
-            }else if(LongSignal()){
+            }else if(ShortSignal() && allPosition == null){
                 
                 stdLotSize = GetOptimalBuyUnit(RecoveryZonePips,StopLossPrc);
-                var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,stdLotSize,label,null,RecoveryZonePips * RewardRiskRatio);
+                var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,stdLotSize,label);
                 if(result.IsSuccessful){
                     lowerZonePrice = result.Position.EntryPrice;
                     upperZonePrice = lowerZonePrice + (RecoveryZonePips * Symbol.PipSize);
                     totalShortUnit = totalShortUnit + result.Position.VolumeInUnits;
-                
+                    targetProfit = Account.Equity * (StopLossPrc * RewardRiskRatio);
                 }
             
             }
@@ -116,6 +143,16 @@ namespace cAlgo.Robots
             
             return Symbol.NormalizeVolumeInUnits(optimalLotSizeInUnit, RoundingMode.Up);
             
+        }
+        
+        private void Reset(){
+                    stdLotSize = 0;
+                    upperZonePrice = 0;
+                    lowerZonePrice = 0;
+                    totalLongUnit = 0;
+                    totalShortUnit = 0;
+                    targetProfit = 0;
+                    allPosition = null;
         }
     }
 }
