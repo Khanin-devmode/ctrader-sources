@@ -154,7 +154,7 @@ namespace cAlgo.Robots
             var shortPositions = Positions.Find(label, SymbolName, TradeType.Sell);
             
             if(currentPhase == TradePhase.AimTP){
-                if(LongSingal() && longPositions == null){
+                if(LongSignal() && longPositions == null){
                    standardVolume = GetOptimalBuyUnit(HedgingPips,StopLossPrc);
                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, standardVolume, label, null, HedgingPips*RewardRiskRatio);
                    if(result.IsSuccessful){
@@ -208,7 +208,7 @@ namespace cAlgo.Robots
             
         }
         
-        private bool LongSingal(){
+        private bool LongSignal(){
 
             return rsi.Result.Last(1) > 30 && rsi.Result.Last(2) < 30; //Sample signal
         }

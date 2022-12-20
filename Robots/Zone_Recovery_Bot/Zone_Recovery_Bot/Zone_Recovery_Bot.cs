@@ -14,6 +14,8 @@ namespace cAlgo.Robots
     public class Zone_Recovery_Bot : Robot
     {
         private const string label = "Zone recovery Bot";
+        
+        private RelativeStrengthIndex rsi;
 
         [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
         public double RewardRiskRatio { get; set; }
@@ -21,7 +23,7 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 1.5, MinValue = 1.2, MaxValue = 2, Step = 0.1)]
         public double HedgingRatio { get; set; }
 
-        [Parameter(DefaultValue = 20, MinValue = 5, MaxValue = 100, Step = 5)]
+        [Parameter(DefaultValue = 30, MinValue = 5, MaxValue = 100, Step = 5)]
         public int RecoveryZonePips { get; set; }
         
         [Parameter("Source", DefaultValue = "Close")]
@@ -36,11 +38,11 @@ namespace cAlgo.Robots
         double totalLongUnit = 0;
         double totalShortUnit = 0;
         double targetProfit = 0;
-        Position[] allPosition;
+        Position[] allPosition = new Position[]{};
 
         protected override void OnStart()
         {
-
+            rsi = Indicators.RelativeStrengthIndex(Source,14);
         }
 
         protected override void OnTick()
@@ -48,11 +50,13 @@ namespace cAlgo.Robots
             
            //when crossing the zone
            //crossing lower zone, short to with higher lot size.
-            if(allPosition != null){
+
+            if(allPosition.Length > 0 ){
+            
                 if(Symbol.Ask <= lowerZonePrice && totalLongUnit > totalShortUnit ){
-           
-                double shortUnitInVolume = (totalLongUnit*HedgingRatio) - totalShortUnit;
-                var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume);
+                Print("Hedging Long!");
+                double shortUnitInVolume = Symbol.NormalizeVolumeInUnits((totalLongUnit*HedgingRatio) - totalShortUnit, RoundingMode.Up) ;
+                var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume,label);
                 if(shortResult.IsSuccessful){
                     //add total
                     totalShortUnit = totalShortUnit + shortResult.Position.VolumeInUnits;
@@ -61,8 +65,8 @@ namespace cAlgo.Robots
                
                }else if(Symbol.Bid >= upperZonePrice && totalShortUnit > totalLongUnit){
                     
-                    double longUnitInVolume = (totalShortUnit * HedgingRatio) - totalLongUnit;
-                    var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume);
+                    double longUnitInVolume = Symbol.NormalizeVolumeInUnits((totalShortUnit * HedgingRatio) - totalLongUnit, RoundingMode.Down);
+                    var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume,label);
                     
                     if(longResult.IsSuccessful){
                         //add total
@@ -70,7 +74,6 @@ namespace cAlgo.Robots
                     }
                }
            
-
                 if(Account.UnrealizedNetProfit > targetProfit){
                 
                     foreach(Position position in allPosition){
@@ -88,9 +91,9 @@ namespace cAlgo.Robots
         
         protected override void OnBar(){
         
-            allPosition = Positions.FindAll(label);
-            
-            if(LongSignal() && allPosition == null){
+            allPosition = Positions.FindAll(label,SymbolName);
+
+            if(LongSignal() && allPosition.Length == 0){
                 
                 stdLotSize = GetOptimalBuyUnit(RecoveryZonePips,StopLossPrc);
                 var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,stdLotSize,label);
@@ -102,7 +105,7 @@ namespace cAlgo.Robots
                 
                 }
             
-            }else if(ShortSignal() && allPosition == null){
+            }else if(ShortSignal() && allPosition.Length == 0){
                 
                 stdLotSize = GetOptimalBuyUnit(RecoveryZonePips,StopLossPrc);
                 var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,stdLotSize,label);
@@ -123,11 +126,13 @@ namespace cAlgo.Robots
         }
         
         private bool LongSignal(){
-            return true;
+
+            return rsi.Result.Last(1) > 30 && rsi.Result.Last(2) < 30; //Sample signal
         }
         
         private bool ShortSignal(){
-            return true;
+
+            return rsi.Result.Last(1) < 70 && rsi.Result.Last(2) > 70; //Sample signal
         }
         
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
@@ -156,7 +161,7 @@ namespace cAlgo.Robots
                     totalLongUnit = 0;
                     totalShortUnit = 0;
                     targetProfit = 0;
-                    allPosition = null;
+                    allPosition = new Position[]{};
         }
     }
 }
