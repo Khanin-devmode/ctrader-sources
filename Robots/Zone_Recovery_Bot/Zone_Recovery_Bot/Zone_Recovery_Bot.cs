@@ -48,28 +48,29 @@ namespace cAlgo.Robots
             
            //when crossing the zone
            //crossing lower zone, short to with higher lot size.
-           if(Symbol.Ask <= lowerZonePrice && totalLongUnit > totalShortUnit ){
+            if(allPosition != null){
+                if(Symbol.Ask <= lowerZonePrice && totalLongUnit > totalShortUnit ){
            
-               double shortUnitInVolume = (totalLongUnit*HedgingRatio) - totalShortUnit;
-               var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume);
-               if(shortResult.IsSuccessful){
+                double shortUnitInVolume = (totalLongUnit*HedgingRatio) - totalShortUnit;
+                var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume);
+                if(shortResult.IsSuccessful){
                     //add total
                     totalShortUnit = totalShortUnit + shortResult.Position.VolumeInUnits;
                     
-               }
-               
-           }else if(Symbol.Bid >= upperZonePrice && totalShortUnit > totalLongUnit){
-                
-                double longUnitInVolume = (totalShortUnit * HedgingRatio) - totalLongUnit;
-                var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume);
-                
-                if(longResult.IsSuccessful){
-                    //add total
-                    totalLongUnit = totalLongUnit + longResult.Position.VolumeInUnits;
                 }
-           }
+               
+               }else if(Symbol.Bid >= upperZonePrice && totalShortUnit > totalLongUnit){
+                    
+                    double longUnitInVolume = (totalShortUnit * HedgingRatio) - totalLongUnit;
+                    var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume);
+                    
+                    if(longResult.IsSuccessful){
+                        //add total
+                        totalLongUnit = totalLongUnit + longResult.Position.VolumeInUnits;
+                    }
+               }
            
-           if(allPosition != null){
+
                 if(Account.UnrealizedNetProfit > targetProfit){
                 
                     foreach(Position position in allPosition){
@@ -78,7 +79,10 @@ namespace cAlgo.Robots
                     
                     Reset();
                 }
-           }
+          
+          }
+
+           
            
         }
         
