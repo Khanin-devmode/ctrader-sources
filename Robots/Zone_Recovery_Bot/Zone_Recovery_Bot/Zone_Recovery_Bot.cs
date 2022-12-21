@@ -16,6 +16,7 @@ namespace cAlgo.Robots
         private const string label = "Zone recovery Bot";
         
         private RelativeStrengthIndex rsi;
+        private DirectionalMovementSystem dms;
 
         [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
         public double RewardRiskRatio { get; set; }
@@ -31,7 +32,10 @@ namespace cAlgo.Robots
         
         [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
-        
+               
+        [Parameter(DefaultValue = 25, MinValue = 10, MaxValue = 100, Step = 5)]
+        public int AdxThres { get; set; }
+                
         double stdLotSize;
         double upperZonePrice;
         double lowerZonePrice;
@@ -43,6 +47,7 @@ namespace cAlgo.Robots
         protected override void OnStart()
         {
             rsi = Indicators.RelativeStrengthIndex(Source,14);
+            dms = Indicators.DirectionalMovementSystem(14);
         }
 
         protected override void OnTick()
@@ -53,34 +58,47 @@ namespace cAlgo.Robots
 
             if(allPosition.Length > 0 ){
             
-                if(Symbol.Ask <= lowerZonePrice && totalLongUnit > totalShortUnit ){
-                Print("Hedging Long!");
-                double shortUnitInVolume = Symbol.NormalizeVolumeInUnits((totalLongUnit*HedgingRatio) - totalShortUnit, RoundingMode.Up) ;
-                var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume,label);
-                if(shortResult.IsSuccessful){
-                    //add total
-                    totalShortUnit = totalShortUnit + shortResult.Position.VolumeInUnits;
-                    
-                }
-               
-               }else if(Symbol.Bid >= upperZonePrice && totalShortUnit > totalLongUnit){
-                    
-                    double longUnitInVolume = Symbol.NormalizeVolumeInUnits((totalShortUnit * HedgingRatio) - totalLongUnit, RoundingMode.Down);
-                    var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume,label);
-                    
-                    if(longResult.IsSuccessful){
+                //if(dms.ADX.LastValue >= AdxThres){
+                    if(Symbol.Ask <= lowerZonePrice && totalLongUnit > totalShortUnit ){
+                    Print("Hedging Long!");
+                    double shortUnitInVolume = Symbol.NormalizeVolumeInUnits((totalLongUnit*HedgingRatio) - totalShortUnit, RoundingMode.Up) ;
+                    var shortResult = ExecuteMarketOrder(TradeType.Sell,SymbolName,shortUnitInVolume,label);
+                    if(shortResult.IsSuccessful){
                         //add total
-                        totalLongUnit = totalLongUnit + longResult.Position.VolumeInUnits;
+                        totalShortUnit = totalShortUnit + shortResult.Position.VolumeInUnits;
+                        
                     }
-               }
+                   
+                   }else if(Symbol.Bid >= upperZonePrice && totalShortUnit > totalLongUnit){
+                        
+                        double longUnitInVolume = Symbol.NormalizeVolumeInUnits((totalShortUnit * HedgingRatio) - totalLongUnit, RoundingMode.Down);
+                        var longResult = ExecuteMarketOrder(TradeType.Buy,SymbolName, longUnitInVolume,label);
+                        
+                        if(longResult.IsSuccessful){
+                            //add total
+                            totalLongUnit = totalLongUnit + longResult.Position.VolumeInUnits;
+                        }
+                   //}                
+            }
+            
+                
+               
+               
            
-                if(Account.UnrealizedNetProfit > targetProfit){
+                if(Account.UnrealizedNetProfit > targetProfit && allPosition.Length < 10){
                 
                     foreach(Position position in allPosition){
                         ClosePositionAsync(position);
                     }
                     
                     Reset();
+                }else if (Account.UnrealizedNetProfit > (targetProfit/2 *(-1))  && allPosition.Length >= 10){
+                    foreach(Position position in allPosition){
+                        ClosePositionAsync(position);
+                    }
+                    
+                    Reset();
+                
                 }
           
           }
