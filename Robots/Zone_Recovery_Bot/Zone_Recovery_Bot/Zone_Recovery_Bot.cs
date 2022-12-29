@@ -103,32 +103,36 @@ namespace cAlgo.Robots
 
             allPosition = Positions.FindAll(label, SymbolName);
 
-            if (LongSignal() && allPosition.Length == 0)
+            if(allPosition.Length == 0)
             {
-
-                stdLotSize = GetOptimalBuyUnit(RecoveryZonePips, StopLossPrc);
-                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, stdLotSize, label);
-                if (result.IsSuccessful)
+                if (LongSignal())
                 {
-                    upperZonePrice = result.Position.EntryPrice;
-                    lowerZonePrice = upperZonePrice - (RecoveryZonePips * Symbol.PipSize);
-                    totalLongUnit = totalLongUnit + result.Position.VolumeInUnits;
-                    targetProfit = Account.Equity * (StopLossPrc * RewardRiskRatio);
+
+                    stdLotSize = GetOptimalBuyUnit(RecoveryZonePips, StopLossPrc);
+                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, stdLotSize, label);
+                    if (result.IsSuccessful)
+                    {
+                        upperZonePrice = result.Position.EntryPrice;
+                        lowerZonePrice = upperZonePrice - (RecoveryZonePips * Symbol.PipSize);
+                        totalLongUnit += result.Position.VolumeInUnits;
+                        targetProfit = Account.Equity * (StopLossPrc * RewardRiskRatio);
+
+                    }
 
                 }
-
-            }
-            else if (ShortSignal() && allPosition.Length == 0)
-            {
-
-                stdLotSize = GetOptimalBuyUnit(RecoveryZonePips, StopLossPrc);
-                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, stdLotSize, label);
-                if (result.IsSuccessful)
+                else if (ShortSignal())
                 {
-                    lowerZonePrice = result.Position.EntryPrice;
-                    upperZonePrice = lowerZonePrice + (RecoveryZonePips * Symbol.PipSize);
-                    totalShortUnit = totalShortUnit + result.Position.VolumeInUnits;
-                    targetProfit = Account.Equity * (StopLossPrc * RewardRiskRatio);
+
+                    stdLotSize = GetOptimalBuyUnit(RecoveryZonePips, StopLossPrc);
+                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, stdLotSize, label);
+                    if (result.IsSuccessful)
+                    {
+                        lowerZonePrice = result.Position.EntryPrice;
+                        upperZonePrice = lowerZonePrice + (RecoveryZonePips * Symbol.PipSize);
+                        totalShortUnit += result.Position.VolumeInUnits;
+                        targetProfit = Account.Equity * (StopLossPrc * RewardRiskRatio);
+                    }
+
                 }
 
             }
@@ -143,13 +147,15 @@ namespace cAlgo.Robots
         private bool LongSignal()
         {
 
-            return rsi.Result.Last(1) > 30 && rsi.Result.Last(2) < 30; //Sample signal
+            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) > 70;
+
+            //return rsi.Result.Last(1) > 30 && rsi.Result.Last(2) < 30; //Sample signal
         }
 
         private bool ShortSignal()
         {
-
-            return rsi.Result.Last(1) < 70 && rsi.Result.Last(2) > 70; //Sample signal
+            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) < 30;
+            // return rsi.Result.Last(1) < 70 && rsi.Result.Last(2) > 70; //Sample signal
         }
 
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
