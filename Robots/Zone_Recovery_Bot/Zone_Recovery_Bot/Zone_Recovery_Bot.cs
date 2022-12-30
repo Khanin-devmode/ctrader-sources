@@ -92,12 +92,12 @@ namespace cAlgo.Robots
                     }
 
                     Reset();
+
                 }
 
             }
 
         }
-
         protected override void OnBar()
         {
 
@@ -147,14 +147,14 @@ namespace cAlgo.Robots
         private bool LongSignal()
         {
 
-            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) > 70;
+            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) < 30;
 
             //return rsi.Result.Last(1) > 30 && rsi.Result.Last(2) < 30; //Sample signal
         }
 
         private bool ShortSignal()
         {
-            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) < 30;
+            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) > 70;
             // return rsi.Result.Last(1) < 70 && rsi.Result.Last(2) > 70; //Sample signal
         }
 
