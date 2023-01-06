@@ -52,7 +52,7 @@ namespace cAlgo.Robots
 
         protected override void OnTick()
         {
-
+            
             //when crossing the zone
             //crossing lower zone, short to with higher lot size.
 
@@ -94,12 +94,22 @@ namespace cAlgo.Robots
                     Reset();
 
                 }
+                
 
             }
+
+
+
 
         }
         protected override void OnBar()
         {
+
+            var highPrice = MarketSeries.High.LastValue;
+            var openTime = MarketSeries.OpenTime.LastValue;
+            var text = Chart.DrawText("text1", "High is here", openTime, highPrice, Color.Yellow);
+            text.VerticalAlignment = VerticalAlignment.Bottom;
+            text.HorizontalAlignment = HorizontalAlignment.Center;
 
             allPosition = Positions.FindAll(label, SymbolName);
 
