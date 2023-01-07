@@ -48,6 +48,28 @@ namespace cAlgo.Robots
         {
             rsi = Indicators.RelativeStrengthIndex(Source, 14);
             dms = Indicators.DirectionalMovementSystem(14);
+            
+            //Get all open positions and resistance.
+            allPosition = Positions.FindAll(label, SymbolName);
+            
+            
+            var entryPosition = allPosition[0]; //Double Check first position is the first entry.
+            if(entryPosition.TradeType == TradeType.Buy){
+                upperZonePrice = entryPosition.EntryPrice;
+                lowerZonePrice = upperZonePrice - (RecoveryZonePips * Symbol.PipSize);
+            }else if(entryPosition.TradeType == TradeType.Sell){
+                lowerZonePrice = entryPosition.EntryPrice;
+                upperZonePrice = lowerZonePrice + (RecoveryZonePips * Symbol.PipSize);
+            }
+            
+            foreach (var position in allPosition){
+                if(position.TradeType == TradeType.Buy){
+                    totalLongUnit += position.VolumeInUnits;
+                }else if(position.TradeType == TradeType.Sell){
+                    totalShortUnit += position.VolumeInUnits;
+                }
+            }
+            
         }
 
         protected override void OnTick()
