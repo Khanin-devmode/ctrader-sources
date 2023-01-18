@@ -11,7 +11,7 @@ namespace cAlgo.Robots
 {
     [Robot(AccessRights = AccessRights.None)]
 
-    public class Zone_Recovery_Bot : Robot
+    public class Zone_Recovery_Bot_Random_Entry : Robot
     {
         private const string label = "Zone recovery Bot";
 
@@ -33,9 +33,6 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
 
-        [Parameter(DefaultValue = 25, MinValue = 10, MaxValue = 100, Step = 5)]
-        public int AdxThres { get; set; }
-
         double stdLotSize;
         double upperZonePrice;
         double lowerZonePrice;
@@ -43,6 +40,11 @@ namespace cAlgo.Robots
         double totalShortUnit = 0;
         double targetProfit = 0;
         Position[] allPosition = new Position[] { };
+        
+        
+        bool longSignal = false;
+        bool shortSignal = false;
+        Random random = new Random();
 
         protected override void OnStart()
         {
@@ -72,13 +74,12 @@ namespace cAlgo.Robots
                 }
             
             }
-
             
         }
 
         protected override void OnTick()
         {
-            
+            RandomEntry();
             //when crossing the zone
             //crossing lower zone, short to with higher lot size.
 
@@ -141,7 +142,7 @@ namespace cAlgo.Robots
 
             if(allPosition.Length == 0)
             {
-                if (LongSignal())
+                if (longSignal)
                 {
 
                     stdLotSize = GetOptimalBuyUnit(RecoveryZonePips, StopLossPrc);
@@ -156,7 +157,7 @@ namespace cAlgo.Robots
                     }
 
                 }
-                else if (ShortSignal())
+                else if (shortSignal)
                 {
 
                     stdLotSize = GetOptimalBuyUnit(RecoveryZonePips, StopLossPrc);
@@ -179,19 +180,15 @@ namespace cAlgo.Robots
         {
             // Handle cBot stop here
         }
-
-        private bool LongSignal()
-        {
-
-            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) < 30;
-
-            //return rsi.Result.Last(1) > 30 && rsi.Result.Last(2) < 30; //Sample signal
-        }
-
-        private bool ShortSignal()
-        {
-            return dms.ADX.Last(1) >= AdxThres && rsi.Result.Last(1) > 70;
-            // return rsi.Result.Last(1) < 70 && rsi.Result.Last(2) > 70; //Sample signal
+        
+        private void RandomEntry(){
+             if(random.Next(2) == 0){
+                longSignal = true;
+             }else{
+                shortSignal = true;
+             }
+             //random.Next(2) == 0 ? TradeType.Buy : TradeType.Sell;
+             
         }
 
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
@@ -221,6 +218,8 @@ namespace cAlgo.Robots
             totalLongUnit = 0;
             totalShortUnit = 0;
             targetProfit = 0;
+            shortSignal = false;
+            longSignal = false;
             allPosition = new Position[] { };
         }
     }
