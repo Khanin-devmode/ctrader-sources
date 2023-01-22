@@ -21,11 +21,8 @@ namespace cAlgo.Robots
         [Parameter("Source", DefaultValue = "Close")]
         public DataSeries Source { get; set; }
 
-        [Parameter(DefaultValue = 70, MinValue = 60, MaxValue = 80, Step = 5)]
-        public int RsiHigh { get; set; }
-        
-        [Parameter(DefaultValue = 30, MinValue = 20, MaxValue = 40, Step = 5)]
-        public int RsiLow { get; set; }
+        [Parameter(DefaultValue = 30, MinValue = 10, MaxValue = 30, Step = 5)]
+        public int RsiThres { get; set; }
         
         [Parameter(DefaultValue = 14, MinValue = 2, MaxValue = 60, Step = 2)]
         public int Period { get; set; }
@@ -165,11 +162,11 @@ namespace cAlgo.Robots
         }
         
         protected bool LongSignal(){
-            return rsi.Result.Last(1) < RsiLow && Bars[1].Close > sma.Result.Last(1);
+            return rsi.Result.Last(1) < RsiThres && Bars[1].Close > sma.Result.Last(1);
         }
         
         protected bool ShortSignal(){
-            return rsi.Result.Last(1) > RsiHigh && Bars[1].Close < sma.Result.Last(1);
+            return rsi.Result.Last(1) > (100-RsiThres) && Bars[1].Close < sma.Result.Last(1);
         }
         
     }
