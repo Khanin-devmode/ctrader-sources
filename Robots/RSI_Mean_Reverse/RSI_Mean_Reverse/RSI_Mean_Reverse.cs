@@ -14,6 +14,7 @@ namespace cAlgo.Robots
     {
         private const string label = "RSI Reverse Bot";
         private RelativeStrengthIndex rsi;
+        private SimpleMovingAverage sma;
 
         Telegram telegram;
         
@@ -27,13 +28,7 @@ namespace cAlgo.Robots
         public int RsiLow { get; set; }
         
         [Parameter(DefaultValue = 14, MinValue = 2, MaxValue = 60, Step = 2)]
-        public int RsiPeriod { get; set; }
-        
-        //[Parameter(DefaultValue = 30, MinValue = 20, MaxValue = 70, Step = 5)]
-        //public int ShortExitRsi { get; set; }
-        
-        //[Parameter(DefaultValue = 70, MinValue = 30, MaxValue = 80, Step = 5)]
-        //public int LongExitRsi { get; set; }
+        public int Period { get; set; }
 
         [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
         public double RewardRiskRatio { get; set; }
@@ -63,7 +58,8 @@ namespace cAlgo.Robots
             }
 
 
-            rsi = Indicators.RelativeStrengthIndex(Source,RsiPeriod);
+            rsi = Indicators.RelativeStrengthIndex(Source,Period);
+            sma = Indicators.SimpleMovingAverage(Source,Period);
         }
 
         //protected override void OnTick()
@@ -115,7 +111,7 @@ namespace cAlgo.Robots
             //}
             
             
-            if (rsi.Result.Last(1) > RsiLow && rsi.Result.Last(2) < RsiLow && longPosition == null){
+            if (LongSignal() && longPosition == null){
                 var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips*RewardRiskRatio);
                 
                 if(NotifyOnOrder){
@@ -128,7 +124,7 @@ namespace cAlgo.Robots
                 }
 
                 
-            } else if (rsi.Result.Last(1) < RsiHigh && rsi.Result.Last(2) > RsiHigh && shortPosition == null){
+            } else if (ShortSignal() && shortPosition == null){
                 var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips * RewardRiskRatio);
                 if(NotifyOnOrder){
                     var position = result.Position;
@@ -167,6 +163,15 @@ namespace cAlgo.Robots
             return Symbol.NormalizeVolumeInUnits(optimalLotSizeInUnit, RoundingMode.Up);
             
         }
+        
+        protected bool LongSignal(){
+            return rsi.Result.Last(1) < RsiLow && Bars[1].Close > sma.Result.Last(1);
+        }
+        
+        protected bool ShortSignal(){
+            return rsi.Result.Last(1) > RsiHigh && Bars[1].Close < sma.Result.Last(1);
+        }
+        
     }
     
     
