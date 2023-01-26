@@ -48,10 +48,20 @@ namespace cAlgo.Robots
                     var cond4 = dBars.Last(i + 1).High > dBars.Last(i + 2).High;
 
                     if (cond1 && cond2 && cond3 && cond4) {
-                        Chart.DrawHorizontalLine($"Resistance Line {i}", dBars.Last(i).High, Color.Red);
-                        
+                        //Chart.DrawHorizontalLine($"Resistance Line {i}", dBars.Last(i).High, Color.Red);
+                        Chart.DrawTrendLine($"Resistance Line Last {i}",dBars.Last(i).OpenTime,dBars.Last(i).High,dBars.LastBar.OpenTime,dBars.Last(i).High,Color.Red);
                     }
-
+                    
+                    var sCond1 = dBars.Last(i).Low < dBars.Last(i-1).Low;
+                    var sCond2 = dBars.Last(i-1).Low < dBars.Last(i-2).Low;
+                    var sCond3 = dBars.Last(i).Low < dBars.Last(i+1).Low;
+                    var sCond4 = dBars.Last(i+1).Low < dBars.Last(i+2).Low;
+                    
+                    if (sCond1 && sCond2 && sCond3 && sCond4) {
+                        //Chart.DrawHorizontalLine($"Resistance Line {i}", dBars.Last(i).High, Color.Red);
+                        Chart.DrawTrendLine($"Support Line Last {i}",dBars.Last(i).OpenTime,dBars.Last(i).Low,dBars.LastBar.OpenTime,dBars.Last(i).Low,Color.Green);
+                    }
+                    
                 }
 
             }
