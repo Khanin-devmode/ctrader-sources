@@ -15,7 +15,7 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = "Hello world!")]
         public string Label { get; set; }
         
-       [Parameter(DefaultValue = 1, MinValue = 1, MaxValue = 2, Step = 0.1)]
+       [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 2, Step = 0.1)]
         public double RiskRewardRatio { get; set; }
         
        [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 200, Step = 5)]
@@ -34,9 +34,9 @@ namespace cAlgo.Robots
         protected override void OnBar(){
         
             var shortPosition = Positions.Find(Label,SymbolName,TradeType.Sell);
+            var longPosition = Positions.Find(Label,SymbolName,TradeType.Buy);
         
-        
-            if(IsPullingLongBack(2) && shortPosition == null){
+            if(IsPullingLongBack() && shortPosition == null){
             
             
                 int slPips = Convert.ToInt16((Bars.Last(1).Close - Bars.Last(3).Open)/(2*Symbol.PipSize));
@@ -46,6 +46,13 @@ namespace cAlgo.Robots
                 double optimalBuyUnit = GetOptimalBuyUnit(slPips,0.02);
                 var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,slPips,tpPips);
             
+            }else if(IsPullingShortBack() && longPosition ==null){
+                
+                int slPips = Convert.ToInt16(Math.Abs((Bars.Last(1).Close - Bars.Last(3).Open))/(2*Symbol.PipSize));
+                int tpPips = Convert.ToInt16(slPips * RiskRewardRatio);
+            
+                double optimalBuyUnit = GetOptimalBuyUnit(slPips,0.02);
+                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,slPips,tpPips);
             }
             
         
@@ -57,7 +64,7 @@ namespace cAlgo.Robots
         }
         
         
-        private bool IsPullingLongBack(int n){// n = last candle count
+        private bool IsPullingLongBack(){// n = last candle count
         
             //for(int i = 1 ; i <=n ; i++){
             //}
@@ -65,15 +72,34 @@ namespace cAlgo.Robots
             bool isCloseHigher = Bars.Last(1).Close > Bars.Last(2).Close &&  Bars.Last(2).Close > Bars.Last(3).Close;
             bool isOpenHigher = Bars.Last(1).Open > Bars.Last(2).Open &&  Bars.Last(2).Open > Bars.Last(3).Open;
             
-            double bar1Size = Bars.Last(1).Close - Bars.Last(1).Open;    
-            double bar2Size = Bars.Last(2).Close - Bars.Last(2).Open; 
-            double bar3Size = Bars.Last(3).Close - Bars.Last(3).Open; 
+            double bar1Size = Math.Abs(Bars.Last(1).Close - Bars.Last(1).Open);    
+            double bar2Size = Math.Abs(Bars.Last(2).Close - Bars.Last(2).Open); 
+            double bar3Size = Math.Abs(Bars.Last(3).Close - Bars.Last(3).Open); 
             
             bool isGettingShorter = bar1Size < bar2Size && bar2Size < bar3Size;
             
-            bool isBigEnough = (Bars.Last(1).Close - Bars.Last(3).Open)/Symbol.PipSize > MinPullBackSize;
+            bool isBigEnough = Math.Abs((Bars.Last(1).Close - Bars.Last(3).Open))/Symbol.PipSize >= MinPullBackSize;
         
             return isCloseHigher && isOpenHigher && isGettingShorter && isBigEnough;
+        }
+        
+        private bool IsPullingShortBack(){// n = last candle count
+        
+            //for(int i = 1 ; i <=n ; i++){
+            //}
+            
+            bool isCloseLower = Bars.Last(1).Close < Bars.Last(2).Close &&  Bars.Last(2).Close < Bars.Last(3).Close;
+            bool isOpenLower = Bars.Last(1).Open < Bars.Last(2).Open &&  Bars.Last(2).Open < Bars.Last(3).Open;
+            
+            double bar1Size = Math.Abs(Bars.Last(1).Close - Bars.Last(1).Open);    
+            double bar2Size = Math.Abs(Bars.Last(2).Close - Bars.Last(2).Open); 
+            double bar3Size = Math.Abs(Bars.Last(3).Close - Bars.Last(3).Open); 
+            
+            bool isGettingShorter = bar1Size < bar2Size && bar2Size < bar3Size;
+            
+            bool isBigEnough = Math.Abs((Bars.Last(1).Close - Bars.Last(3).Open))/Symbol.PipSize >= MinPullBackSize;
+        
+            return isCloseLower && isOpenLower && isGettingShorter && isBigEnough;
         }
         
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
