@@ -12,8 +12,8 @@ namespace cAlgo.Robots
     [Robot(AccessRights = AccessRights.None)]
     public class PullingBackPatternBot : Robot
     {
-        [Parameter(DefaultValue = "Hello world!")]
-        public string Label { get; set; }
+
+        public string Label = "Pulling Back Bot";
         
        [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 2, Step = 0.1)]
         public double RiskRewardRatio { get; set; }
