@@ -14,6 +14,12 @@ namespace cAlgo.Robots
     {
         [Parameter(DefaultValue = "Hello world!")]
         public string Label { get; set; }
+        
+       [Parameter(DefaultValue = 1, MinValue = 1, MaxValue = 2, Step = 0.1)]
+        public double RiskRewardRatio { get; set; }
+        
+       [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 200, Step = 5)]
+        public double MinPullBackSize { get; set; }
 
         protected override void OnStart()
         {
@@ -32,9 +38,11 @@ namespace cAlgo.Robots
         
             if(IsPullingLongBack(2) && shortPosition == null){
             
-                int tpPips = Convert.ToInt16((Bars.Last(1).Close - Bars.Last(3).Open)/(2*Symbol.PipSize));
-                Print(tpPips);
-                int slPips = (tpPips/2);
+            
+                int slPips = Convert.ToInt16((Bars.Last(1).Close - Bars.Last(3).Open)/(2*Symbol.PipSize));
+
+                int tpPips = Convert.ToInt16(slPips * RiskRewardRatio);
+                
                 double optimalBuyUnit = GetOptimalBuyUnit(slPips,0.02);
                 var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,slPips,tpPips);
             
@@ -62,8 +70,10 @@ namespace cAlgo.Robots
             double bar3Size = Bars.Last(3).Close - Bars.Last(3).Open; 
             
             bool isGettingShorter = bar1Size < bar2Size && bar2Size < bar3Size;
+            
+            bool isBigEnough = (Bars.Last(1).Close - Bars.Last(3).Open)/Symbol.PipSize > MinPullBackSize;
         
-            return isCloseHigher && isOpenHigher && isGettingShorter;
+            return isCloseHigher && isOpenHigher && isGettingShorter && isBigEnough;
         }
         
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
