@@ -76,7 +76,7 @@ namespace cAlgo.Robots
                     Print(slPips);
                     
                     var volumeInUnits = GetOptimalBuyUnit(slPips,StopLossPrc);
-                    ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, slPips,tpPips);
+                    ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, slPips,tpPips,"",true);
                 
             }else if(ShortSignal() && shortPosition == null){
                     
@@ -85,7 +85,7 @@ namespace cAlgo.Robots
                     Print(slPips);
                     
                     var volumeInUnits = GetOptimalBuyUnit(slPips,StopLossPrc);
-                    ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips);
+                    ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
             } 
         
         }
