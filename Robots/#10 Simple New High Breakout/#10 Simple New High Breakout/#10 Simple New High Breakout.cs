@@ -15,7 +15,7 @@ namespace cAlgo.Robots
         
         private const string Label = "Simple Bars Breakout";
         
-        [Parameter(DefaultValue = 20, MinValue = 5, MaxValue = 50, Step = 5)]
+        [Parameter(DefaultValue = 20, MinValue = 5, MaxValue = 100, Step = 5)]
         public int SlPips { get; set; }
         
         [Parameter(DefaultValue = 0.02)]
@@ -50,13 +50,13 @@ namespace cAlgo.Robots
             
             if(LongSignal() && longPosition == null){
             
-                var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,SlPips,SlPips*RiskRewardRatio);
+                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,SlPips,SlPips*RiskRewardRatio);
             
             } 
             
-            if(ShortSignal() && shortPosition  ==null){
+            if(ShortSignal() && shortPosition  == null){
                
-               var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,SlPips,SlPips*RiskRewardRatio);
+               var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,SlPips,SlPips*RiskRewardRatio);
             }
         }
 
@@ -85,7 +85,7 @@ namespace cAlgo.Robots
                 if(!(Bars.Last(1).Low < Bars.Last(i).Low)){
                         return false;
                 }
-                //does not have any false, Last Bar is new high.
+
                 
             }
             

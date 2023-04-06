@@ -109,7 +109,8 @@ namespace cAlgo.Robots
                     }
                 }
 
-                if (Account.UnrealizedNetProfit > targetProfit)
+               if (Account.UnrealizedNetProfit > targetProfit)
+               //if (Account.UnrealizedNetProfit > 0)
                 {
 
                     foreach (Position position in allPosition)
