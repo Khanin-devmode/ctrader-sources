@@ -6,30 +6,29 @@ using cAlgo.API;
 using cAlgo.API.Collections;
 using cAlgo.API.Indicators;
 using cAlgo.API.Internals;
+using System.Threading.Tasks;
 
+// Entry: Long when close is higher of BB top 
+// & Close is the highest of the last x bar
+// & ADX is higher than 25
+// & stop loss pips is higher than minimum stop lost to reduce noise. 
+// Entry volume with optimal unit at 2% SL of equity.
+// Short entry is vice versa.
+// Exit: Long SL is at low of the trigger bar.
+// TP as ratio from SL.
+// With Trailing SL.
 
-// Behavior
-// long: 
-// when lastbar close is lower than bb low &
-// oversold can be very long.
-// 
-//
-//
-//
-//
-//
-//
-//
+// REMINDER: This bot cannot utilise 100% cpu, not sure why.
 
 namespace cAlgo.Robots
 {
-    [Robot(AccessRights = AccessRights.None)]
+    [Robot(AccessRights = AccessRights.FullAccess)]
     public class BBBreakOut_a : Robot
     {
 
         private BollingerBands bb;
         private DirectionalMovementSystem dms;
-
+        
         [Parameter(DefaultValue = 14, MinValue = 4, MaxValue = 30, Step = 2)]
         public int Period { get; set; }
 
@@ -51,6 +50,8 @@ namespace cAlgo.Robots
         private const string label = "BB Breakout version A bot";
 
         protected DataSeries Source;
+        protected int adxThres = 25;
+
 
         protected override void OnStart()
         {
@@ -72,17 +73,17 @@ namespace cAlgo.Robots
             var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
 
 
-            if (BuySignal() && longPosition == null)
+            if (LongSignal() && longPosition == null)
             {
 
-                int slPips = Convert.ToInt32((Symbol.Bid - Bars.Last(1).Low) / Symbol.PipSize);
-                int tpPips = Convert.ToInt32(slPips * TpRatio);
+                int slPips = Convert.ToInt16((Symbol.Bid - Bars.Last(1).Low) / Symbol.PipSize);
+                int tpPips = Convert.ToInt16(slPips * TpRatio);
 
                 if (slPips > MinSlPips)
                 {
 
                     var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
-                    ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
+                    ExecuteMarketOrderAsync(TradeType.Buy, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
                 }
 
 
@@ -91,14 +92,14 @@ namespace cAlgo.Robots
             else if (ShortSignal() && shortPosition == null)
             {
 
-                int slPips = Convert.ToInt32((Bars.Last(1).High - Symbol.Ask) / Symbol.PipSize);
-                int tpPips = Convert.ToInt32(slPips * TpRatio);
+                int slPips = Convert.ToInt16((Bars.Last(1).High - Symbol.Ask) / Symbol.PipSize);
+                int tpPips = Convert.ToInt16(slPips * TpRatio);
 
-                if (slPips > 0)
+                if (slPips > MinSlPips)
                 {
 
                     var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
-                    ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
+                    ExecuteMarketOrderAsync(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
                 }
 
             }
@@ -106,26 +107,20 @@ namespace cAlgo.Robots
         }
 
 
-        private bool BuySignal()
+        private bool LongSignal()
         {
-
             var top = bb.Top.Last(1);
+            bool isBreakingBB = Bars.Last(1).Close > top;
 
-            bool isBreakingBB = Bars.LastBar.Close > top;
-            bool isStrongTrend = dms.ADX.LastValue > 25;
-
-            return isBreakingBB && IsBreakingResistance() && isStrongTrend;
+            return isBreakingBB && IsBreakingResistance() && IsStrongTrend();
         }
 
         private bool ShortSignal()
         {
-
             var bottom = bb.Bottom.Last(1);
+            bool isBreakingBB = Bars.Last(1).Close < bottom;
 
-            bool isBreakingBB = Bars.LastBar.Close < bottom;
-            bool isStrongTrend = dms.ADX.LastValue > 25;
-
-            return isBreakingBB && IsBreakingSupport() && isStrongTrend;
+            return isBreakingBB && IsBreakingSupport() && IsStrongTrend();
         }
 
         private bool IsBreakingResistance()
@@ -145,8 +140,8 @@ namespace cAlgo.Robots
 
         private bool IsBreakingSupport()
         {
-            for (var i = 2; i <= BackwardBars; i++)
-            {
+
+            for (var i = 2; i <= BackwardBars; i++){
                 if (!(Bars.Last(1).Low < Bars.Last(i).Low))
                 {
                     return false;
@@ -155,6 +150,11 @@ namespace cAlgo.Robots
 
             return true;
         }
+        
+        private bool IsStrongTrend(){
+            return dms.ADX.LastValue > adxThres;
+        }
+        
 
         protected double GetOptimalBuyUnit(int stopLossPips, double stopLossPrc)
         {
