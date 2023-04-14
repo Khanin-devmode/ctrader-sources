@@ -14,7 +14,9 @@ using System.Threading.Tasks;
 // & stop loss pips is higher than minimum stop lost to reduce noise. 
 // Entry volume with optimal unit at 2% SL of equity.
 // Short entry is vice versa.
-// Exit: Fixed SL
+// Exit: Long SL is at low of the trigger bar. Short SL is vice versa.
+// TP as ratio from SL.
+// With Trailing SL.
 
 // REMINDER: This bot cannot utilise 100% cpu, not sure why.
 
@@ -42,8 +44,8 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 3, Step = 0.2)]
         public double TpRatio { get; set; }
 
-        [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 50, Step = 5)]
-        public int SlPips { get; set; }
+        [Parameter(DefaultValue = 10, MinValue = 0, MaxValue = 30, Step = 5)]
+        public int MinSlPips { get; set; }
 
         private const string label = "BB Breakout version A bot";
 
@@ -74,14 +76,15 @@ namespace cAlgo.Robots
             if (LongSignal() && longPosition == null)
             {
 
-               
-                int tpPips = Convert.ToInt16(SlPips * TpRatio);
+                int slPips = Convert.ToInt16((Symbol.Bid - Bars.Last(1).Low) / Symbol.PipSize);
+                int tpPips = Convert.ToInt16(slPips * TpRatio);
 
+                if (slPips > MinSlPips)
+                {
 
-
-                    var volumeInUnits = GetOptimalBuyUnit(SlPips, StopLossPrc);
-                    ExecuteMarketOrderAsync(TradeType.Buy, SymbolName, volumeInUnits, label, SlPips, tpPips, "", true);
-                
+                    var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
+                    ExecuteMarketOrderAsync(TradeType.Buy, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
+                }
 
 
 
@@ -89,13 +92,15 @@ namespace cAlgo.Robots
             else if (ShortSignal() && shortPosition == null)
             {
 
+                int slPips = Convert.ToInt16((Bars.Last(1).High - Symbol.Ask) / Symbol.PipSize);
+                int tpPips = Convert.ToInt16(slPips * TpRatio);
 
-                int tpPips = Convert.ToInt16(SlPips * TpRatio);
+                if (slPips > MinSlPips)
+                {
 
-
-                    var volumeInUnits = GetOptimalBuyUnit(SlPips, StopLossPrc);
-                    ExecuteMarketOrderAsync(TradeType.Sell, SymbolName, volumeInUnits, label, SlPips, tpPips, "", true);
-                
+                    var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
+                    ExecuteMarketOrderAsync(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips, "", true);
+                }
 
             }
 
