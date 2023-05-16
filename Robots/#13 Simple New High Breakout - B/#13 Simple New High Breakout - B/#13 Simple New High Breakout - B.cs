@@ -27,6 +27,9 @@ namespace cAlgo.Robots
         
         [Parameter(DefaultValue = 30, MinValue = 10, MaxValue = 90, Step = 5)]
         public int BackwardBars { get; set; }
+        
+        private int ResistanceBarPos;
+        private int SupportBarPos;
 
         protected override void OnStart()
         {
@@ -46,18 +49,30 @@ namespace cAlgo.Robots
             var longPosition = Positions.Find(Label,SymbolName,TradeType.Buy);
             var shortPosition = Positions.Find(Label,SymbolName,TradeType.Sell);
             
-            var optimalBuyUnit = GetOptimalBuyUnit(SlPips,SlPrc);
+            
             
             
             if(LongSignal() && longPosition == null){
             
-                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,SlPips,SlPips*RiskRewardRatio);
+            
+                double low = GetLowLastXBars(ResistanceBarPos);
+                
+                int slPips = Convert.ToInt16((Symbol.Bid - low)/Symbol.PipSize);
+                
+                var optimalBuyUnit = GetOptimalBuyUnit(slPips,SlPrc);
+            
+                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,slPips,slPips*RiskRewardRatio);
             
             } 
             
             if(ShortSignal() && shortPosition  == null){
+            
+                double high = GetHighLastXBars(SupportBarPos);
+                int slPips = Convert.ToInt16((high - Symbol.Ask)/Symbol.PipSize);
+                
+                var optimalBuyUnit = GetOptimalBuyUnit(slPips,SlPrc);
                
-               var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,SlPips,SlPips*RiskRewardRatio);
+               var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,slPips,slPips*RiskRewardRatio);
             }
         }
 
@@ -74,6 +89,9 @@ namespace cAlgo.Robots
                     
                     return false;
                 }
+                
+                
+                ResistanceBarPos = i;
                
             }
             
@@ -87,6 +105,7 @@ namespace cAlgo.Robots
                         return false;
                 }
 
+                SupportBarPos = i;
                 
             }
             
