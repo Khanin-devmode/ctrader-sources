@@ -12,6 +12,8 @@ using cAlgo.API.Internals;
 // SL: just pips and %
 // TP: SL * RR
 
+//Result Comment: Condition is conflicting result in no trades met.
+
 namespace cAlgo.Robots
 {
     [Robot(AccessRights = AccessRights.FullAccess)]
@@ -169,11 +171,11 @@ namespace cAlgo.Robots
         }
         
         protected bool LongSignal(){
-            return rsi.Result.Last(1) < RsiThres && Bars[1].Close > sma.Result.Last(1);
+            return rsi.Result.Last(1) < RsiThres && Bars.Last(1).Close > sma.Result.Last(1);
         }
         
         protected bool ShortSignal(){
-            return rsi.Result.Last(1) > (100-RsiThres) && Bars[1].Close < sma.Result.Last(1);
+            return rsi.Result.Last(1) > (100-RsiThres) && Bars.Last(1).Close < sma.Result.Last(1);
         }
         
     }
