@@ -7,6 +7,11 @@ using cAlgo.API.Collections;
 using cAlgo.API.Indicators;
 using cAlgo.API.Internals;
 
+// Long: When Rsi is below threshold, and Close is higher than SMA.
+// Short: vice versa.
+// SL: just pips and %
+// TP: SL * RR
+
 namespace cAlgo.Robots
 {
     [Robot(AccessRights = AccessRights.FullAccess)]
@@ -121,7 +126,9 @@ namespace cAlgo.Robots
                 }
 
                 
-            } else if (ShortSignal() && shortPosition == null){
+            }  
+            
+            if (ShortSignal() && shortPosition == null){
                 var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips * RewardRiskRatio);
                 if(NotifyOnOrder){
                     var position = result.Position;
