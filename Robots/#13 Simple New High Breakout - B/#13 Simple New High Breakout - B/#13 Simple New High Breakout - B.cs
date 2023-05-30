@@ -17,7 +17,8 @@ namespace cAlgo.Robots
     public class NewcBot : Robot
     {
         
-        private const string Label = "Simple Bars Breakout";
+        private string Label;
+        private AverageTrueRange averageTrueRange;
         
         [Parameter(DefaultValue = 0.02)]
         public double SlPrc { get; set; }
@@ -30,12 +31,25 @@ namespace cAlgo.Robots
         
         private int ResistanceBarPos;
         private int SupportBarPos;
+        
+        [Parameter(DefaultValue = true)]
+        public bool IsTrailing { get; set; }
+        
+        [Parameter(DefaultValue = 0.002, MinValue = 0.001, MaxValue = 0.01, Step = 0.001)] //default value 20 pips, average range, will affect by timeframe.
+        public double ATRValueThres { get; set; }
+
+        
+        [Parameter(DefaultValue = 14)]
+        public int Periods { get; set; }
+ 
+        [Parameter("MA Type", DefaultValue = MovingAverageType.Simple)]
+        public MovingAverageType MAType { get; set; }        
 
         protected override void OnStart()
         {
-            // To learn more about cTrader Automate visit our Help Center:
-            // https://help.ctrader.com/ctrader-automate
-
+            Label = "Simple Bars Breakout v13: "+ Symbol.Name;
+            
+            averageTrueRange = Indicators.AverageTrueRange(Periods, MAType);
 
         }
 
@@ -50,30 +64,32 @@ namespace cAlgo.Robots
             var shortPosition = Positions.Find(Label,SymbolName,TradeType.Sell);
             
             
-            
-            
-            if(LongSignal() && longPosition == null){
-            
-            
-                double low = GetLowLastXBars(ResistanceBarPos);
+            if(averageTrueRange.Result.LastValue >= ATRValueThres){
+                if(LongSignal() && longPosition == null){
                 
-                int slPips = Convert.ToInt16((Symbol.Bid - low)/Symbol.PipSize);
                 
-                var optimalBuyUnit = GetOptimalBuyUnit(slPips,SlPrc);
-            
-                var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,slPips,slPips*RiskRewardRatio);
-            
-            } 
-            
-            if(ShortSignal() && shortPosition  == null){
-            
-                double high = GetHighLastXBars(SupportBarPos);
-                int slPips = Convert.ToInt16((high - Symbol.Ask)/Symbol.PipSize);
+                    double low = GetLowLastXBars(ResistanceBarPos);
+                    
+                    int slPips = Convert.ToInt16((Symbol.Bid - low)/Symbol.PipSize);
+                    
+                    var optimalBuyUnit = GetOptimalBuyUnit(slPips,SlPrc);
                 
-                var optimalBuyUnit = GetOptimalBuyUnit(slPips,SlPrc);
-               
-               var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,slPips,slPips*RiskRewardRatio);
+                    var result = ExecuteMarketOrder(TradeType.Buy,SymbolName,optimalBuyUnit,Label,slPips,slPips*RiskRewardRatio);
+                
+                } 
+                
+                if(ShortSignal() && shortPosition  == null){
+                
+                    double high = GetHighLastXBars(SupportBarPos);
+                    int slPips = Convert.ToInt16((high - Symbol.Ask)/Symbol.PipSize);
+                    
+                    var optimalBuyUnit = GetOptimalBuyUnit(slPips,SlPrc);
+                   
+                   var result = ExecuteMarketOrder(TradeType.Sell,SymbolName,optimalBuyUnit,Label,slPips,slPips*RiskRewardRatio);
+                }
             }
+            
+            
         }
 
         protected override void OnStop()
