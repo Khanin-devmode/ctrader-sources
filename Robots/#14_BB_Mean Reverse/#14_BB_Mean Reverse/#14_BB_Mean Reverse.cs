@@ -60,7 +60,7 @@ namespace cAlgo.Robots
         protected override void OnStart()
         {
 
-            label = "BB Mean Reverse Bot: " + Symbol.Name;
+            label = "#14 BB Mean Reverse Bot: " + Symbol.Name;
             bb = Indicators.BollingerBands(Source, Period, 2, MAType);
             atr = Indicators.AverageTrueRange(Period, MAType);
 
@@ -74,40 +74,6 @@ namespace cAlgo.Robots
 
         }
 
-        //protected override void OnTick()
-        //{
-
-        //    var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
-        //    var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
-
-        //    if(shortPosition != null && rsi.Result.LastValue <= ShortExitRsi){
-        //        var result = ClosePosition(shortPosition);
-
-
-        //        //telegram logic
-        //        if(NotifyOnOrder){
-        //            var position = result.Position;
-        //            if(result.IsSuccessful){
-        //                telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing SHORT poition {position.SymbolName}. Profit {position.NetProfit} USD");
-        //            }else{
-        //                telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
-        //            }
-        //        }
-        //    }else if (longPosition != null && rsi.Result.LastValue >= LongExitRsi){
-        //        var result = ClosePosition(longPosition);
-
-        //        //telegram logic
-        //        if(NotifyOnOrder){
-        //            var position = result.Position;
-        //            if(result.IsSuccessful){
-        //                telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] Closing LONG poition {position.SymbolName}. Profit {position.NetProfit} USD");
-        //            }else{
-        //                telegram.SendTelegram(ChatID, BotToken, $"Error closing position {result.Error}");
-        //            }
-        //        }                
-
-        //    }
-        //}
 
         protected override void OnBar()
         {
@@ -118,32 +84,36 @@ namespace cAlgo.Robots
                 var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
                 var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
 
-                var volumeInUnits = GetOptimalBuyUnit(StopLossPips, StopLossPrc);
-
-                //if(shortPosition != null && rsi.Result.Last(1) <= ExitRsi){
-                //    ClosePosition(shortPosition);
-                //}else if (longPosition != null && rsi.Result.Last(1) >= ExitRsi){
-                //    ClosePosition(longPosition);
-                //}
-
-
                 if (LongSignal() && longPosition == null)
                 {
-                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips * RewardRiskRatio);
+                
+                    int tpPips = Convert.ToInt16((bb.Main.LastValue - bb.Bottom.LastValue)/Symbol.PipSize);
+                    int slPips = Convert.ToInt16(tpPips/RewardRiskRatio);
+                    
+                    var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
+                
+                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, slPips, tpPips);
+                    
                     if (NotifyOnOrder)
                     {
-                        NotifyTelegram("long", result);
+                        NotifyTelegram(result);
                     }
-
+                   
 
                 }
 
                 if (ShortSignal() && shortPosition == null)
                 {
-                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, StopLossPips, StopLossPips * RewardRiskRatio);
+                    int tpPips = Convert.ToInt16((bb.Top.LastValue - bb.Main.LastValue)/Symbol.PipSize);
+                    int slPips = Convert.ToInt16(tpPips/RewardRiskRatio);
+                    
+                    var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
+                    
+                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips);
+                    
                     if (NotifyOnOrder)
                     {
-                        NotifyTelegram("short", result);
+                        NotifyTelegram(result);
                     }
                 }
 
@@ -193,16 +163,13 @@ namespace cAlgo.Robots
             return Bars.Last(1).Close > bb.Top.LastValue;
         }
         
-        private void NotifyTelegram(string direction, TradeResult result){
-                                    var position = result.Position;
-                        if (result.IsSuccessful)
-                        {
-                            telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] {direction} {position.SymbolName} at {position.EntryPrice}");
-                        }
-                        else
-                        {
-                            telegram.SendTelegram(ChatID, BotToken, $"Error executing market order {result.Error}");
-                        }
+        private void NotifyTelegram(TradeResult result){
+            var position = result.Position;
+            if (result.IsSuccessful){
+                telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] {position.TradeType} {position.SymbolName} at {position.EntryPrice}");
+            }else{
+                telegram.SendTelegram(ChatID, BotToken, $"Error executing market order {result.Error}");
+            }
         }
 
     }
