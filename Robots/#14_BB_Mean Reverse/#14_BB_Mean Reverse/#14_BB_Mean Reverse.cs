@@ -16,7 +16,7 @@ using cAlgo.API.Internals;
 // SL: Size of the band e.g. BB Top - Bottom with some ratio.
 // Filter noise with ATR
 
-//Result Comment: Condition is conflicting result in no trades met.
+//Result Comment: Exit at main BB is not a good ratio with SL, result RR is lower than 1. And trade usually lost when enter against long trend.
 
 namespace cAlgo.Robots
 {
@@ -32,9 +32,6 @@ namespace cAlgo.Robots
 
         [Parameter(DefaultValue = 14, MinValue = 2, MaxValue = 60, Step = 2)]
         public int Period { get; set; }
-
-        [Parameter(DefaultValue = 2, MinValue = 1, MaxValue = 5, Step = 0.5)]
-        public double RewardRiskRatio { get; set; }
 
         [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
