@@ -7,10 +7,13 @@ using cAlgo.API.Collections;
 using cAlgo.API.Indicators;
 using cAlgo.API.Internals;
 
+// --ENTRY--
 // Long: When close is lower than lower bb.
 // Short: vice versa.
-// TP: at middle band
-// SL: ratio to TP
+// --Exit--
+// Long: When close is higher than main bb.
+// Short: When close is lower than main bb.
+// SL: Size of the band e.g. BB Top - Bottom with some ratio.
 // Filter noise with ATR
 
 //Result Comment: Condition is conflicting result in no trades met.
@@ -24,8 +27,6 @@ namespace cAlgo.Robots
         private BollingerBands bb;
         private AverageTrueRange atr;
 
-
-
         [Parameter("Source", DefaultValue = "Close")]
         public DataSeries Source { get; set; }
 
@@ -37,6 +38,9 @@ namespace cAlgo.Robots
 
         [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
+
+        [Parameter(DefaultValue = 1, MinValue = 0.2, MaxValue = 2, Step = 0.2)]
+        public double BBSLRatio { get; set; }
 
         [Parameter("MA Type", DefaultValue = MovingAverageType.Simple)]
         public MovingAverageType MAType { get; set; }
@@ -76,50 +80,53 @@ namespace cAlgo.Robots
 
 
         protected override void OnBar()
-        {
-
+        {   
+        
+            var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
+            var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
+            
+            //ENTRY
             if (atr.Result.LastValue > ATRValueThres)
             {
 
-                var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
-                var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
-
                 if (LongSignal() && longPosition == null)
                 {
-                
-                    int tpPips = Convert.ToInt16((bb.Main.LastValue - bb.Bottom.LastValue)/Symbol.PipSize);
-                    int slPips = Convert.ToInt16(tpPips/RewardRiskRatio);
-                    
+
+                    int slPips = Convert.ToInt16(((bb.Top.Last(1) - bb.Bottom.Last(1)) / Symbol.PipSize)*BBSLRatio);
                     var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
-                
-                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, slPips, tpPips);
-                    
+
+                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, slPips, null);
+
                     if (NotifyOnOrder)
                     {
                         NotifyTelegram(result);
                     }
-                   
 
                 }
 
                 if (ShortSignal() && shortPosition == null)
                 {
-                    int tpPips = Convert.ToInt16((bb.Top.LastValue - bb.Main.LastValue)/Symbol.PipSize);
-                    int slPips = Convert.ToInt16(tpPips/RewardRiskRatio);
-                    
+                    int slPips = Convert.ToInt16(((bb.Top.Last(1) - bb.Bottom.Last(1)) / Symbol.PipSize)*BBSLRatio);
                     var volumeInUnits = GetOptimalBuyUnit(slPips, StopLossPrc);
-                    
-                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, tpPips);
-                    
+
+                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, slPips, null);
+
                     if (NotifyOnOrder)
                     {
                         NotifyTelegram(result);
                     }
                 }
 
-
-
-
+            }
+            
+            //EXIT
+            if (longPosition != null && LongExitSignal())
+            {
+                ClosePosition(longPosition);
+            }
+            if (shortPosition != null && ShortExitSignal())
+            {
+                ClosePosition(shortPosition);
             }
 
 
@@ -155,19 +162,33 @@ namespace cAlgo.Robots
 
         protected bool LongSignal()
         {
-            return Bars.Last(1).Close < bb.Bottom.LastValue;
+            return Bars.Last(1).Close < bb.Bottom.Last(1);
         }
 
         protected bool ShortSignal()
         {
-            return Bars.Last(1).Close > bb.Top.LastValue;
+            return Bars.Last(1).Close > bb.Top.Last(1);
         }
-        
-        private void NotifyTelegram(TradeResult result){
+
+        protected bool LongExitSignal()
+        {
+            return Bars.Last(1).Close > bb.Main.Last(1);
+        }
+
+        protected bool ShortExitSignal()
+        {
+            return Bars.Last(1).Close < bb.Main.Last(1);
+        }
+
+        private void NotifyTelegram(TradeResult result)
+        {
             var position = result.Position;
-            if (result.IsSuccessful){
+            if (result.IsSuccessful)
+            {
                 telegram.SendTelegram(ChatID, BotToken, $"[{position.Id}] {position.TradeType} {position.SymbolName} at {position.EntryPrice}");
-            }else{
+            }
+            else
+            {
                 telegram.SendTelegram(ChatID, BotToken, $"Error executing market order {result.Error}");
             }
         }
