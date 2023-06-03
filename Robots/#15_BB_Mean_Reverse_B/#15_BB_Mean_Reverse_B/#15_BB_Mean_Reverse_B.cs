@@ -14,7 +14,7 @@ using cAlgo.API.Internals;
 // --Exit--
 // Long: When close is higher than main bb.
 // Short: When close is lower than main bb.
-// SL: Size of the band e.g. BB Top - Bottom with some ratio.
+// SL: Just use Pips and let optimizer guides.
 
 
 
