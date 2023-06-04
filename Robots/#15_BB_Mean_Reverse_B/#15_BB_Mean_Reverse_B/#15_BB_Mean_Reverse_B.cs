@@ -15,9 +15,7 @@ using cAlgo.API.Internals;
 // Long: When close is higher than main bb.
 // Short: When close is lower than main bb.
 // SL: Just use Pips and let optimizer guides.
-
-
-
+// Break: When closing position is lost, break for break periods.
 
 namespace cAlgo.Robots
 {
@@ -27,7 +25,9 @@ namespace cAlgo.Robots
         private string label;
         private BollingerBands bb;
         private AverageTrueRange atr;
-        private MovingAverage longMa;
+        private MovingAverage slowMa;
+        private int breakPeriod;
+
 
         [Parameter("Source", DefaultValue = "Close")]
         public DataSeries Source { get; set; }
@@ -38,9 +38,12 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 30, MinValue = 20, MaxValue = 90, Step = 10)]
         public int LongPeriod { get; set; }
 
+        [Parameter(DefaultValue = 5, MinValue = 3, MaxValue = 10, Step = 1)]
+        public int BreakPeriod { get; set; }
+
         [Parameter(DefaultValue = 0.02)]
         public double StopLossPrc { get; set; }
-        
+
         [Parameter(DefaultValue = 20, MinValue = 10, MaxValue = 60, Step = 5)]
         public int SlPips { get; set; }
 
@@ -49,7 +52,6 @@ namespace cAlgo.Robots
 
         [Parameter(DefaultValue = 0.002, MinValue = 0.001, MaxValue = 0.01, Step = 0.001)] //default value 20 pips, average range, will affect by timeframe.
         public double ATRValueThres { get; set; }
-
 
         //Telegram Parameter
         Telegram telegram;
@@ -69,7 +71,8 @@ namespace cAlgo.Robots
             label = "#15 BB Mean Reverse B Bot: " + Symbol.Name;
             bb = Indicators.BollingerBands(Source, ShortPeriod, 2, MAType);
             atr = Indicators.AverageTrueRange(ShortPeriod, MAType);
-            longMa = Indicators.MovingAverage(Source,LongPeriod, MAType);
+            slowMa = Indicators.MovingAverage(Source, LongPeriod, MAType);
+            breakPeriod = 0;
 
             //Telegram initialize.
             if (NotifyOnOrder)
@@ -79,22 +82,36 @@ namespace cAlgo.Robots
                 telegram.SendTelegram(ChatID, BotToken, $"{label} Start");
             }
 
+            {
+                Positions.Closed += PositionsOnClosed;
+            }
+
         }
 
+        private void PositionsOnClosed(PositionClosedEventArgs args)
+        {
+            var position = args.Position;
+            Print("Position closed with {0} profit", position.GrossProfit);
+            if (position.GrossProfit < 0) { breakPeriod = 5; }
+        }
 
         protected override void OnBar()
-        {   
-        
+        {
+
+            if (breakPeriod > 0)
+            {
+                breakPeriod--;
+            }
+
             var longPosition = Positions.Find(label, SymbolName, TradeType.Buy);
             var shortPosition = Positions.Find(label, SymbolName, TradeType.Sell);
-            
+
             //ENTRY
-            if (atr.Result.LastValue > ATRValueThres)
+            if (atr.Result.LastValue > ATRValueThres && breakPeriod == 0)
             {
 
                 if (LongSignal() && longPosition == null)
                 {
-
                     var volumeInUnits = GetOptimalBuyUnit(SlPips, StopLossPrc);
 
                     var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, SlPips, null);
@@ -120,7 +137,7 @@ namespace cAlgo.Robots
                 }
 
             }
-            
+
             //EXIT
             if (longPosition != null && LongExitSignal())
             {
@@ -164,12 +181,12 @@ namespace cAlgo.Robots
 
         protected bool LongSignal()
         {
-            return Bars.Last(1).Close < bb.Bottom.Last(1) && Bars.Last(1).Low > longMa.Result.Last(1);
+            return Bars.Last(1).Close < bb.Bottom.Last(1) && Bars.Last(1).Low > slowMa.Result.Last(1);
         }
 
         protected bool ShortSignal()
         {
-            return Bars.Last(1).Close > bb.Top.Last(1) && Bars.Last(1).High < longMa.Result.Last(1);
+            return Bars.Last(1).Close > bb.Top.Last(1) && Bars.Last(1).High < slowMa.Result.Last(1);
         }
 
         protected bool LongExitSignal()
