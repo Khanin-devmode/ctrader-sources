@@ -52,6 +52,9 @@ namespace cAlgo.Robots
 
         [Parameter(DefaultValue = 0.002, MinValue = 0.001, MaxValue = 0.01, Step = 0.001)] //default value 20 pips, average range, will affect by timeframe.
         public double ATRValueThres { get; set; }
+        
+        [Parameter(DefaultValue = false)]
+        public bool IsTrailing{get;set;}
 
         //Telegram Parameter
         Telegram telegram;
@@ -92,7 +95,7 @@ namespace cAlgo.Robots
         {
             var position = args.Position;
             Print("Position closed with {0} profit", position.GrossProfit);
-            if (position.GrossProfit < 0) { breakPeriod = 5; }
+            if (position.GrossProfit < 0) { breakPeriod = BreakPeriod; }
         }
 
         protected override void OnBar()
@@ -114,7 +117,7 @@ namespace cAlgo.Robots
                 {
                     var volumeInUnits = GetOptimalBuyUnit(SlPips, StopLossPrc);
 
-                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, SlPips, null);
+                    var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volumeInUnits, label, SlPips, null, "no comment", IsTrailing);
 
                     if (NotifyOnOrder)
                     {
@@ -128,7 +131,7 @@ namespace cAlgo.Robots
 
                     var volumeInUnits = GetOptimalBuyUnit(SlPips, StopLossPrc);
 
-                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, SlPips, null);
+                    var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volumeInUnits, label, SlPips, null, "no comment", IsTrailing);
 
                     if (NotifyOnOrder)
                     {
