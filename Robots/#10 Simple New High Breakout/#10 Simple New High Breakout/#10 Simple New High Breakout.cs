@@ -27,7 +27,8 @@ namespace cAlgo.Robots
         [Parameter(DefaultValue = 30, MinValue = 10, MaxValue = 90, Step = 5)]
         public int BackwardBars { get; set; }
         
-
+        [Parameter(DefaultValue = false)]
+        public bool IsTrailing {get;set;}
         protected override void OnStart()
         {
             // To learn more about cTrader Automate visit our Help Center:
